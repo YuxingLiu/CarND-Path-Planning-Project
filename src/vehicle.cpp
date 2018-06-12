@@ -28,10 +28,29 @@ Vehicle::~Vehicle(){}
 
 
 vector<Vehicle> Vehicle::choose_next_state(map<int, vector<vehicle>> predictions) {
+    /*
+    Behavior planning
+    */
 
-    //TODO: behavior planning
+    // Only consider reachable states from current FSM state.
+    vector<string> states = successor_states();
 
-    return generate_trajectory("CS", predictions);
+    // Calculate total cost of each possible state.
+    vector<double> costs;
+    vector<vector<Vehicle>> final_trajectories;
+
+    for(int i = 0; i < states.size(); i++) {
+        vector<Vehicle> trajectory = generate_trajectory(states[i], predictions);
+        if(trajectory.size() != 0) {
+            costs.push_back(calculate_cost(*this, predictions, trajectory));
+            final_trajectories.push_back(trajectory);
+        }
+    }
+
+    vector<double>::iterator best_cost = min_element(costs.begin(), cost.end());
+    int best_idx = distance(costs.begin(), best_cost);
+
+    return final_trajectories[best_idx];
 }
 
 vector<string> Vehicle::successor_state() {

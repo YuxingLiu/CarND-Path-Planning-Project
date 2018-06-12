@@ -20,7 +20,7 @@ public:
 
 //    int L = 1;
 
-    int preferred_buffer = 6;   // impact "keep lane" behavior
+    double preferred_buffer = 6;   // impact "keep lane" behavior
 
     int lane;
 
@@ -41,6 +41,8 @@ public:
     double goal_s;
 
     string state;
+
+    double dt = 0.05;   // sampling time
 
     /**
     * Constructor
@@ -69,7 +71,7 @@ public:
 
     vector<Vehicle> prep_lane_change_trajector(string state, map<int, vector<Vehicle>> predictions);
 
-    void increment(double dt);
+    void increment();
 
     double position_at(double t);
 

@@ -42,7 +42,7 @@ public:
 
     string state;
 
-    double dt = 0.05;   // sampling time
+    double dt = 0.02;   // sampling time
 
     /**
     * Constructor
@@ -75,9 +75,9 @@ public:
 
     double position_at(double t);
 
-    bool get_vehicle_behind(map<int, Vehicle>> predictions, int lane, Vehicle & rVehicle);
+    bool get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane, Vehicle & rVehicle);
 
-    bool get_vehicle_ahead(map<int, Vehicle>> predictions, int lane, Vehicle & rVehicle);
+    bool get_vehicle_ahead(map<int, vector<Vehicle>> predictions, int lane, Vehicle & rVehicle);
 
     vector<Vehicle> generate_predictions(int horizon=2);
 

@@ -9,6 +9,7 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 #include "spline.h"
+#include "vehicle.h"
 
 using namespace std;
 
@@ -355,7 +356,7 @@ int main() {
                     ptsy[i] = shift_x * sin(0-ref_yaw) + shift_y * cos(0-ref_yaw);
                 }
 
-                // crate a spline
+                // create a spline
                 tk::spline s;
 
                 // set (x,y) point to the spline

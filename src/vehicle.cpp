@@ -21,16 +21,32 @@ Vehicle::Vehicle(int lane, double s, double v, double a, string state) {
     this->a = a;
     this->state = state;
     max_acceleration = -1;
-
 }
 
 Vehicle::~Vehicle(){}
 
 
-vector<Vehicle> Vehicle::choose_next_state(map<int, vector<vehicle>> predictions) {
+vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion) {
     /*
     Behavior planning
     */
+
+    // Predict other vehicles using sensor fusion data.
+    map<int, vector<Vehicle>> predictions;
+
+    for(int i = 0; i < sensor_fusion.size(); i++) {
+        int v_id = sensor_fusion[i][0]
+        double vx = sensor_fusion[i][3];
+        double vy = sensor_fusion[i][4];
+        double v = sqrt(vx*vx, vy*vy);
+        double s = sensor_fusion[i][5];
+        double d = sensor_fusion[i][6];
+        int lane = d / 4;
+
+        Vehicle veh = Vehicle(lane, s, v, 0, "CS");     // Assume constant speed in prediction.
+        vector<Vehicle> preds = veh.generate_predictions();
+        predictions[v_id] = preds;
+    }
 
     // Only consider reachable states from current FSM state.
     vector<string> states = successor_states();
@@ -47,7 +63,7 @@ vector<Vehicle> Vehicle::choose_next_state(map<int, vector<vehicle>> predictions
         }
     }
 
-    vector<double>::iterator best_cost = min_element(costs.begin(), cost.end());
+    vector<double>::iterator best_cost = min_element(costs.begin(), costs.end());
     int best_idx = distance(costs.begin(), best_cost);
 
     return final_trajectories[best_idx];

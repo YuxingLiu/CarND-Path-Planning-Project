@@ -13,13 +13,6 @@ public:
 
     map<string, int> lane_direction = {{"PLCL", 1}, {"LCL", 1}, {"LCR", -1}, {"PLCR", -1}};
 
-    struct collider{
-        bool collision;     // is there a collision?
-        int time;
-    };
-
-//    int L = 1;
-
     double preferred_buffer = 6;   // impact "keep lane" behavior
 
     int lane;
@@ -55,7 +48,7 @@ public:
     */
     virtual ~Vehicle();
 
-    vector<Vehicle> choose_next_state(map<int, vector<Vehicle>> predictions);
+    vector<Vehicle> choose_next_state(vector<vector<double>> sensor_fusion);
 
     vector<string> successor_state();
 

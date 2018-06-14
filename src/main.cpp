@@ -208,7 +208,25 @@ int main() {
   // referen velocity
   double ref_vel = 0.0; // mph
 
-  h.onMessage([&ref_vel, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  // previous speed for acceleration calculation;
+  double previous_speed = 0.0;  // m/s
+
+  // flag of lane change
+  bool lane_change = false;
+
+  // initial state of FSM
+  string car_state = "KL";
+
+  // ego vehicle configuration
+  double max_v = 49.5 / 2.24;   // m/s
+  double max_a = 10;    // m/s2
+  int num_lanes = 3;
+  vector<double> ego_config = {max_v, num_lanes, max_s, lane, max_a};
+  Vehicle ego = Vehicle(lane, 0, ref_vel, 0, car_state);
+  ego.configure(ego_config);
+
+
+  h.onMessage([&ego, &ref_vel, &previous_speed, &lane, &lane_change, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -234,6 +252,8 @@ int main() {
           	double car_d = j[1]["d"];
           	double car_yaw = j[1]["yaw"];
           	double car_speed = j[1]["speed"];
+                double car_a = (car_speed - previous_speed) / 0.02;
+                previous_speed = car_speed;
 
           	// Previous path data given to the Planner
           	auto previous_path_x = j[1]["previous_path_x"];
@@ -280,15 +300,29 @@ int main() {
 
 
                 // consider acceleration limits
-                if(too_close)
+                if(too_close && lane_change == false)
                 {
-                    ref_vel -= .224;
+                    // ref_vel -= .224;
+                    ego.update(lane, car_s, car_speed, 0, "KL");
+                    vector<Vehicle> trajectory = ego.choose_next_state(sensor_fusion);
+                    ego.realize_next_state(trajectory);
+                    ref_vel = ego.v * 2.24;
+                    if(ego.lane != lane) {
+                        lane = ego.lane;
+                        lane_change = true;
+                    }
+                }
+                else if(lane_change) {
+                    if(car_d > 4*lane && car_d < 4+4*lane) {
+                        lane_change = false;
+                    }
                 }
                 else if(ref_vel < 49.5)
                 {
                     ref_vel += .224;
                 }
 
+                cout << "Lane: " << lane << ",\t speed: " << ref_vel << ",\t accel: " << car_a << ",\t\t state: " << ego.state << endl;
 
                 // create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
                 // later, interpolate these waypoints with a spline and fill in iwth more points that control speed

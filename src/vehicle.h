@@ -60,9 +60,9 @@ public:
 
     vector<Vehicle> keep_lane_trajectory(map<int, vector<Vehicle>> predictions);
 
-    vector<Vehicle> lane_change_trajector(string state, map<int, vector<Vehicle>> predictions);
+    vector<Vehicle> lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
-    vector<Vehicle> prep_lane_change_trajector(string state, map<int, vector<Vehicle>> predictions);
+    vector<Vehicle> prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
     void increment();
 
@@ -77,6 +77,8 @@ public:
     void realize_next_state(vector<Vehicle> trajectory);
 
     void configure(vector<double> road_data);
+
+    void update(int lane, double s, double v, double a, string state = "KL");
 
 };
 

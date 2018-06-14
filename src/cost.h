@@ -4,7 +4,7 @@
 
 using namespace std;
 
-double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle> & predictions, const vector<Vehicle> & trajectory);
+double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, const vector<Vehicle> & trajectory);
 
 double goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, double> & data);
 

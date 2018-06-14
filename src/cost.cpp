@@ -48,13 +48,26 @@ double inefficiency_cost(const Vehicle & vehicle, const vector<Vehicle> & trajec
     return cost;
 }
 
-double lane_speed(const Vehicle & vehicle, const map<int, <vector<Vehicle>> & predictions, int lane) {
+double lane_speed(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, int lane) {
     /*
     If a vehicle is found ahead of the ego vehicle in a lane (within certain range), lane speed is the traffic speed.
     */
 
+    double min_s = vehicle.goal_s;
     Vehicle vehicle_ahead;
-    if(vehicle.get_vehicle_ahead(predictions, lane, vehicle_ahead)) {
+    Vehicle temp_vehicle;
+    bool found_vehicle = false;
+
+    for(map<int, vector<Vehicle>>::const_iterator it = predictions.begin(); it != predictions.end(); ++it) {
+        temp_vehicle = it->second[0];
+        if(temp_vehicle.lane == lane && temp_vehicle.s > vehicle.s && temp_vehicle.s < min_s) {
+            min_s = temp_vehicle.s;
+            vehicle_ahead = temp_vehicle;
+            found_vehicle = true;
+        }
+    }
+
+    if(found_vehicle) {
         return vehicle_ahead.v;
     }
 
@@ -62,7 +75,7 @@ double lane_speed(const Vehicle & vehicle, const map<int, <vector<Vehicle>> & pr
     return -1.0;
 }
 
-double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, const vector<Vehicle> trajectory) {
+double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, const vector<Vehicle> & trajectory) {
     /*
     Sum weighted cost functions to get total cost for trajectory.
     */
@@ -95,7 +108,7 @@ map<string, double> get_helper_data(const Vehicle & vehicle, const vector<Vehicl
 
     if(trajectory_last.state.compare("PLCL") == 0) {
         intended_lane = trajectory_last.lane + 1;
-    } else if(trajectory_last.state.comapre("PLCR") == 0) {
+    } else if(trajectory_last.state.compare("PLCR") == 0) {
         intended_lane = trajectory_last.lane - 1;
     } else {
         intended_lane = trajectory_last.lane;

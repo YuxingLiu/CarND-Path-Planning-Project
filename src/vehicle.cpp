@@ -301,11 +301,7 @@ vector<Vehicle> Vehicle::generate_predictions(int horizon) {
 
     for(int i = 0; i < horizon; i++) {
         double next_s = position_at(dt*i);
-        double next_v = 0;
-        if(i < horizon - 1) {
-            next_v = position_at(dt*(i+1)) - this->s;
-        }
-        predictions.push_back(Vehicle(this->lane, next_s, next_v, 0));
+        predictions.push_back(Vehicle(this->lane, next_s, this->v, 0));
     }
 
     return predictions;

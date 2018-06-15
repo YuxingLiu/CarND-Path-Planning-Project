@@ -221,7 +221,7 @@ int main() {
   double max_v = 49.5 / 2.24;   // m/s
   double max_a = 10;    // m/s2
   int num_lanes = 3;
-  vector<double> ego_config = {max_v, num_lanes, max_s, lane, max_a};
+  vector<double> ego_config = {max_v, double(num_lanes), max_s, double(lane), max_a};
   Vehicle ego = Vehicle(lane, 0, ref_vel, 0, car_state);
   ego.configure(ego_config);
 
@@ -303,7 +303,7 @@ int main() {
                 if(too_close && lane_change == false)
                 {
                     // ref_vel -= .224;
-                    ego.update(lane, car_s, car_speed, 0, "KL");
+                    ego.update(lane, car_s, car_speed / 2.24, 0, "KL");
                     vector<Vehicle> trajectory = ego.choose_next_state(sensor_fusion);
                     ego.realize_next_state(trajectory);
                     ref_vel = ego.v * 2.24;
@@ -322,7 +322,7 @@ int main() {
                     ref_vel += .224;
                 }
 
-                cout << "Lane: " << lane << ",\t speed: " << ref_vel << ",\t accel: " << car_a << ",\t\t state: " << ego.state << endl;
+                cout << "Lane: " << lane << ",\t speed: " << ref_vel << ",\t localize: " << car_speed << ",\t\t state: " << ego.state << endl;
 
                 // create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
                 // later, interpolate these waypoints with a spline and fill in iwth more points that control speed

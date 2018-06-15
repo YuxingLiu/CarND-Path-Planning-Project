@@ -302,8 +302,7 @@ int main() {
                 // consider acceleration limits
                 if(too_close && lane_change == false)
                 {
-                    // ref_vel -= .224;
-                    ego.update(lane, car_s, car_speed / 2.24, 0, "KL");
+                    ego.update(lane, car_s, car_speed / 2.24, 0, ego.state);
                     vector<Vehicle> trajectory = ego.choose_next_state(sensor_fusion);
                     ego.realize_next_state(trajectory);
                     ref_vel = ego.v * 2.24;
@@ -315,6 +314,7 @@ int main() {
                 else if(lane_change) {
                     if(car_d > 4*lane && car_d < 4+4*lane) {
                         lane_change = false;
+                        ego.state = "KL";
                     }
                 }
                 else if(ref_vel < 49.5)
@@ -322,7 +322,7 @@ int main() {
                     ref_vel += .224;
                 }
 
-                cout << "Lane: " << lane << ",\t speed: " << ref_vel << ",\t localize: " << car_speed << ",\t\t state: " << ego.state << endl;
+                cout << "Lane: " << lane << ",\t speed: " << ref_vel << ",\t localize: " << car_speed << ",\t state: " << ego.state << endl;
 
                 // create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
                 // later, interpolate these waypoints with a spline and fill in iwth more points that control speed

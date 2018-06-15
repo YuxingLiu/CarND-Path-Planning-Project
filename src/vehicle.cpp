@@ -66,6 +66,8 @@ vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion)
     vector<double>::iterator best_cost = min_element(costs.begin(), costs.end());
     int best_idx = distance(costs.begin(), best_cost);
 
+    cout << "Debug: costs.size() = " << costs.size() << ",\t states.size() = " << states.size() << ",\t current state: " << this->state << endl;
+
     return final_trajectories[best_idx];
 }
 
@@ -90,7 +92,7 @@ vector<string> Vehicle::successor_state() {
     } else if(state.compare("PLCR") == 0) {
         if(lane != 0) {
             states.push_back("PLCR");
-            states.push_back("PLCR");
+            states.push_back("LCR");
         }
     }
 
@@ -227,11 +229,13 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
         next_lane_vehicle = it->second[0];
 
         // Add buffer to account for the actual vehicle size
-        if(next_lane_vehicle.s <= this->s + preferred_buffer && next_lane_vehicle.s >= this->s + preferred_buffer && next_lane_vehicle.lane == new_lane) {
+        if(next_lane_vehicle.s <= this->s + preferred_buffer && next_lane_vehicle.s >= this->s - preferred_buffer && next_lane_vehicle.lane == new_lane) {
             // If lane change is not possible, return empty trajectory.
             return trajectory;
         }
     }
+
+    cout<< "Debug: lane change is feasible!" << endl;
 
     trajectory.push_back(Vehicle(this->lane, this->s, this->v, this->a, this->state));
     vector<double> kinematics = get_kinematics(predictions, new_lane);

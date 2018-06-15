@@ -64,8 +64,6 @@ public:
 
     vector<Vehicle> prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
-    void increment();
-
     double position_at(double t);
 
     bool get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane, Vehicle & rVehicle);

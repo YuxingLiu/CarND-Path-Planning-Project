@@ -240,10 +240,6 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
     return trajectory;
 }
 
-void Vehicle::increment() {
-    this->s = position_at(dt);
-}
-
 double Vehicle::position_at(double t) {
     return this->s + this->v * t + 0.5 * this->a * t * t;
 }

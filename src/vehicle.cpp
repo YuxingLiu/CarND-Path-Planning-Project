@@ -85,12 +85,12 @@ vector<string> Vehicle::successor_state() {
         states.push_back("PLCL");
         states.push_back("PLCR");
     } else if(state.compare("PLCL") == 0) {
-        if(lane != lanes_available - 1) {
+        if(lane != 0) {
             states.push_back("PLCL");
             states.push_back("LCL");
         }
     } else if(state.compare("PLCR") == 0) {
-        if(lane != 0) {
+        if(lane != lanes_available - 1) {
             states.push_back("PLCR");
             states.push_back("LCR");
         }
@@ -134,12 +134,8 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
     Vehicle vehicle_behind;
 
     if(get_vehicle_ahead(predictions, lane, vehicle_ahead)) {
-        if(get_vehicle_behind(predictions, lane, vehicle_behind)) {
-            new_velocity = vehicle_ahead.v;     // must travel at the speed of traffic, regardless of preferred buffer
-        } else {
-            double max_velocity_in_front = (vehicle_ahead.s - this->s - preferred_buffer) / dt + vehicle_ahead.v - 0.5 * this->a * dt;
-            new_velocity = min(min(max_velocity_in_front, max_velocity_accel_limit), this->target_speed);
-        }
+        double max_velocity_in_front = (vehicle_ahead.s - this->s - preferred_buffer) / dt + vehicle_ahead.v - 0.5 * this->a * dt;
+        new_velocity = min(min(max_velocity_in_front, max_velocity_accel_limit), this->target_speed);
     } else {
         new_velocity = min(max_velocity_accel_limit, this->target_speed);
     }

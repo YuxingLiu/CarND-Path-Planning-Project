@@ -53,7 +53,7 @@ double lane_speed(const Vehicle & vehicle, const map<int, vector<Vehicle>> & pre
     If a vehicle is found ahead of the ego vehicle in a lane (within certain range), lane speed is the traffic speed.
     */
 
-    double min_s = vehicle.goal_s;
+    double min_s = vehicle.s + 30;
     Vehicle vehicle_ahead;
     Vehicle temp_vehicle;
     bool found_vehicle = false;

@@ -42,9 +42,10 @@ vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion)
         double s = sensor_fusion[i][5];
         double d = sensor_fusion[i][6];
         int lane = d / 4;
+        int horizon = 50;       // predict over 1 sec.
 
         Vehicle veh = Vehicle(lane, s, v, 0, "CS");     // Assume constant speed in prediction.
-        vector<Vehicle> preds = veh.generate_predictions();
+        vector<Vehicle> preds = veh.generate_predictions(horizon);
         predictions[v_id] = preds;
     }
 
@@ -82,8 +83,11 @@ vector<string> Vehicle::successor_state() {
     string state = this->state;
 
     if(state.compare("KL") == 0) {
-        states.push_back("PLCL");
-        states.push_back("PLCR");
+        if(lane != 0) {
+            states.push_back("PLCL");
+        } else if(lane != lanes_available - 1) {
+            states.push_back("PLCR");
+        }
     } else if(state.compare("PLCL") == 0) {
         if(lane != 0) {
             states.push_back("PLCL");
@@ -134,8 +138,16 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
     Vehicle vehicle_behind;
 
     if(get_vehicle_ahead(predictions, lane, vehicle_ahead)) {
-        double max_velocity_in_front = (vehicle_ahead.s - this->s - preferred_buffer) / dt + vehicle_ahead.v - 0.5 * this->a * dt;
-        new_velocity = min(min(max_velocity_in_front, max_velocity_accel_limit), this->target_speed);
+        //double max_velocity_in_front = (vehicle_ahead.s - this->s - 2 * preferred_buffer) / dt + vehicle_ahead.v - 0.5 * this->a * dt;
+        //new_velocity = min(min(max_velocity_in_front, max_velocity_accel_limit), this->target_speed);
+
+        if(vehicle_ahead.v < this->v) {
+            new_velocity = this->v - 0.2;
+            //new_velocity = vehicle_ahead.v;
+        } else {
+            new_velocity = this->v;
+        }
+       // cout<< endl <<"Debug: vehicle_ahead.v = " << vehicle_ahead.v << endl << endl;
     } else {
         new_velocity = min(max_velocity_accel_limit, this->target_speed);
     }
@@ -181,17 +193,18 @@ vector<Vehicle> Vehicle::prep_lane_change_trajectory(string state, map<int, vect
     double new_s;
     double new_v;
     double new_a;
-    Vehicle vehicle_behind;
+    // Vehicle vehicle_behind;
     int new_lane = this->lane + lane_direction[state];
     vector<Vehicle> trajectory = {Vehicle(this->lane, this->s, this->v, this->a, this->state)};
     vector<double> curr_lane_new_kinematics = get_kinematics(predictions, this->lane);
 
-    if(get_vehicle_behind(predictions, this->lane, vehicle_behind)) {
+/*    if(get_vehicle_behind(predictions, this->lane, vehicle_behind)) {
         // Keep speed of current lane so as not to collide with car behind.
         new_s = curr_lane_new_kinematics[0];
         new_v = curr_lane_new_kinematics[1];
         new_a = curr_lane_new_kinematics[2];
     } else {
+*/
         vector<double> best_kinematics;
         vector<double> next_lane_new_kinematics = get_kinematics(predictions, new_lane);
 
@@ -205,7 +218,7 @@ vector<Vehicle> Vehicle::prep_lane_change_trajectory(string state, map<int, vect
         new_s = best_kinematics[0];
         new_v = best_kinematics[1];
         new_a = best_kinematics[2];
-    }
+    //}
 
     trajectory.push_back(Vehicle(this->lane, new_s, new_v, new_a, state));
     return trajectory;
@@ -221,14 +234,9 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
     Vehicle next_lane_vehicle;
 
     // Check if a lane change is possible (if another vehicle occupies that spot).
-    for(map<int, vector<Vehicle>>::iterator it = predictions.begin(); it != predictions.end(); ++it) {
-        next_lane_vehicle = it->second[0];
-
-        // Add buffer to account for the actual vehicle size
-        if(next_lane_vehicle.s <= this->s + preferred_buffer && next_lane_vehicle.s >= this->s - preferred_buffer && next_lane_vehicle.lane == new_lane) {
-            // If lane change is not possible, return empty trajectory.
-            return trajectory;
-        }
+    if(get_vehicle_behind(predictions, new_lane, next_lane_vehicle)) {
+        // If lane change is not possible, return empty trajectory.
+        return trajectory;
     }
 
     cout<< "Debug: lane change is feasible!" << endl;
@@ -250,16 +258,23 @@ bool Vehicle::get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane
     The passed reference rVehicle is updated if a vehicle is found.
     */
 
-    double max_s = -1;
+    //double max_s = -1;
+    double max_s = this->s - 30;        // only account for vehicles 30m behind.
     bool found_vehicle = false;
     Vehicle temp_vehicle;
+    double ub = this->s + preferred_buffer;
+    double lb = this->s - preferred_buffer;
 
     for(map<int, vector<Vehicle>>::iterator it = predictions.begin(); it != predictions.end(); ++it) {
         temp_vehicle = it->second[0];
-        if(temp_vehicle.lane == lane && temp_vehicle.s < this->s && temp_vehicle.s > max_s) {
+        if(temp_vehicle.lane == lane && temp_vehicle.s < ub && temp_vehicle.s > max_s) {
             max_s = temp_vehicle.s;
-            rVehicle = temp_vehicle;
-            found_vehicle = true;
+
+            // check if it is too close to the ego vehicle
+            if(temp_vehicle.s > lb || temp_vehicle.s + temp_vehicle.v > lb) {
+                rVehicle = temp_vehicle;
+                found_vehicle = true;
+            }
         }
     }
 
@@ -272,19 +287,24 @@ bool Vehicle::get_vehicle_ahead(map<int, vector<Vehicle>> predictions, int lane,
     The passed reference rVehicle is updated if a vehicle is found.
     */
 
-    double min_s = this->goal_s;
+    //double min_s = this->goal_s;
+    double min_s = this->s + 60;        // only account for vehicles 30m ahead.
     bool found_vehicle = false;
     Vehicle temp_vehicle;
+    double ub = this->s;
 
     for(map<int, vector<Vehicle>>::iterator it = predictions.begin(); it != predictions.end(); ++it) {
         temp_vehicle = it->second[0];
-        if(temp_vehicle.lane == lane && temp_vehicle.s > this->s && temp_vehicle.s < min_s) {
+
+        // add a buffer for a safe lane change
+        if(temp_vehicle.lane == lane && temp_vehicle.s > ub && temp_vehicle.s < min_s) {
             min_s = temp_vehicle.s;
             rVehicle = temp_vehicle;
             found_vehicle = true;
         }
     }
 
+    cout<< endl <<"Debug: vehicle_ahead.v = " << rVehicle.v << ",\t gap = " << rVehicle.s - this->s << endl << endl;
     return found_vehicle;
 }
 
@@ -297,7 +317,7 @@ vector<Vehicle> Vehicle::generate_predictions(int horizon) {
 
     for(int i = 0; i < horizon; i++) {
         double next_s = position_at(dt*i);
-        predictions.push_back(Vehicle(this->lane, next_s, this->v, 0));
+        predictions.push_back(Vehicle(this->lane, next_s, this->v, 0, "CS"));
     }
 
     return predictions;

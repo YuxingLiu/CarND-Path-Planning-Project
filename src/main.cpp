@@ -222,7 +222,7 @@ int main() {
   double max_a = 10;    // m/s2
   int num_lanes = 3;
   vector<double> ego_config = {max_v, double(num_lanes), max_s, double(lane), max_a};
-  Vehicle ego = Vehicle(lane, 0, ref_vel, 0, car_state);
+  Vehicle ego = Vehicle(lane, 0, ref_vel/2.24, 0, car_state);
   ego.configure(ego_config);
 
 
@@ -280,7 +280,8 @@ int main() {
                 {
                     // car in my lane
                     double d = sensor_fusion[i][6];
-                    if(d < (2+4*lane+2) && d > (2+4*lane-2))
+                    //if(d < (2+4*lane+2) && d > (2+4*lane-2))
+                    if(d < car_d + 2  && d > car_d - 2)
                     {
                         double vx = sensor_fusion[i][3];
                         double vy = sensor_fusion[i][4];
@@ -294,8 +295,14 @@ int main() {
                         {
                             //ref_vel = 29.5; //mph
                             too_close = true;
+                            cout << "Debug: too close!\t Vid = " << sensor_fusion[i][0] << ",\t s = " << sensor_fusion[i][5] << ",\t s+ = " << check_car_s << ",\t prev_size = " << prev_size << endl;
                         }
                     }
+                }
+
+
+                if(too_close && lane_change) {
+                    cout << "Debug: too_close and lane_change, do nothing!" << endl;
                 }
 
 
@@ -317,12 +324,14 @@ int main() {
                         ego.state = "KL";
                     }
                 }
-                else if(ref_vel < 49.5)
+                else
                 {
-                    ref_vel += .224;
+                    if(ref_vel < 49.5) {
+                        ref_vel += .224;
+                    }
                 }
 
-                cout << "Lane: " << lane << ",\t speed: " << ref_vel << ",\t localize: " << car_speed << ",\t state: " << ego.state << endl;
+                cout << "Lane: " << lane << ",\t speed: " << ref_vel << ",\t localize: " << car_speed << ",\t state: " << ego.state << endl << endl;
 
                 // create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
                 // later, interpolate these waypoints with a spline and fill in iwth more points that control speed

@@ -38,15 +38,16 @@ vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion)
         int v_id = sensor_fusion[i][0];
         double vx = sensor_fusion[i][3];
         double vy = sensor_fusion[i][4];
-        double v = sqrt(vx*vx + vy*vy);
-        double s = sensor_fusion[i][5];
-        double d = sensor_fusion[i][6];
-        int lane = d / 4;
+        double vi = sqrt(vx*vx + vy*vy);
+        double si = sensor_fusion[i][5];
+        double di = sensor_fusion[i][6];
+        int lanei = di / 4;
         int horizon = 50;       // predict over 1 sec.
 
-        Vehicle veh = Vehicle(lane, s, v, 0, "CS");     // Assume constant speed in prediction.
+        Vehicle veh = Vehicle(lanei, si, vi, 0, "CS");     // Assume constant speed in prediction.
         vector<Vehicle> preds = veh.generate_predictions(horizon);
         predictions[v_id] = preds;
+        cout << "Vid = " << v_id << ",\t d = " << di << ",\t lane = " << lanei << ",\t v = " << vi << ",\t s = " << si << endl;
     }
 
     // Only consider reachable states from current FSM state.
@@ -67,7 +68,7 @@ vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion)
     vector<double>::iterator best_cost = min_element(costs.begin(), costs.end());
     int best_idx = distance(costs.begin(), best_cost);
 
-    cout << "Debug: costs.size() = " << costs.size() << ",\t states.size() = " << states.size() << ",\t current state: " << this->state << endl;
+    cout << "Debug: costs.size() = " << costs.size() << ",\t states.size() = " << states.size() << ",\t, s = " << this->s << ",\t current state: " << this->state << endl;
 
     return final_trajectories[best_idx];
 }
@@ -84,9 +85,9 @@ vector<string> Vehicle::successor_state() {
 
     if(state.compare("KL") == 0) {
         if(lane != 0) {
-            states.push_back("PLCL");
+            states.push_back("LCL");
         } else if(lane != lanes_available - 1) {
-            states.push_back("PLCR");
+            states.push_back("LCR");
         }
     } else if(state.compare("PLCL") == 0) {
         if(lane != 0) {
@@ -239,7 +240,7 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
         return trajectory;
     }
 
-    cout<< "Debug: lane change is feasible!" << endl;
+    cout<< "Debug: " << state << " is feasible!" << endl;
 
     trajectory.push_back(Vehicle(this->lane, this->s, this->v, this->a, this->state));
     vector<double> kinematics = get_kinematics(predictions, new_lane);
@@ -304,7 +305,10 @@ bool Vehicle::get_vehicle_ahead(map<int, vector<Vehicle>> predictions, int lane,
         }
     }
 
-    cout<< endl <<"Debug: vehicle_ahead.v = " << rVehicle.v << ",\t gap = " << rVehicle.s - this->s << endl << endl;
+    if(found_vehicle) {
+        cout << "Debug: found vehine in lane " << lane << ",\t vehicle.state = " << rVehicle.state << ",\t vehicle_ahead.v = " << rVehicle.v << ",\t gap = " << rVehicle.s - this->s << endl;
+    }
+
     return found_vehicle;
 }
 

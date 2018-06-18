@@ -219,7 +219,7 @@ int main() {
 
   // ego vehicle configuration
   double max_v = 49.5 / 2.24;   // m/s
-  double max_a = 10;    // m/s2
+  double max_a = 6;    // m/s2
   int num_lanes = 3;
   vector<double> ego_config = {max_v, double(num_lanes), max_s, double(lane), max_a};
   Vehicle ego = Vehicle(lane, 0, ref_vel/2.24, 0, car_state);
@@ -288,7 +288,7 @@ int main() {
                         double check_speed = sqrt(vx*vx + vy*vy);
                         double check_car_s = sensor_fusion[i][5];
 
-                        // project s value forward in time
+                        // project s value forward in time (to compensate measurement latency)
                         check_car_s += ((double)prev_size * .02 * check_speed);
                         // check s values greater than mine and s gap
                         if(check_car_s > car_s && check_car_s < car_s + 30)
@@ -310,7 +310,7 @@ int main() {
                 if(too_close && lane_change == false)
                 {
                     ego.update(lane, car_s, car_speed / 2.24, 0, ego.state);
-                    vector<Vehicle> trajectory = ego.choose_next_state(sensor_fusion);
+                    vector<Vehicle> trajectory = ego.choose_next_state(sensor_fusion, prev_size);
                     ego.realize_next_state(trajectory);
                     ref_vel = ego.v * 2.24;
                     if(ego.lane != lane) {
@@ -322,6 +322,9 @@ int main() {
                     if(car_d > 4*lane && car_d < 4+4*lane) {
                         lane_change = false;
                         ego.state = "KL";
+                    }
+                    if(too_close) {
+                        ref_vel -= .224;
                     }
                 }
                 else

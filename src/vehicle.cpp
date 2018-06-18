@@ -26,7 +26,7 @@ Vehicle::Vehicle(int lane, double s, double v, double a, string state) {
 Vehicle::~Vehicle(){}
 
 
-vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion) {
+vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion, int prev_size) {
     /*
     Behavior planning
     */
@@ -40,6 +40,7 @@ vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion)
         double vy = sensor_fusion[i][4];
         double vi = sqrt(vx*vx + vy*vy);
         double si = sensor_fusion[i][5];
+        si += (double)prev_size * dt * vi;      // to compensate measurement latency.
         double di = sensor_fusion[i][6];
         int lanei = di / 4;
         int horizon = 50;       // predict over 1 sec.
@@ -86,7 +87,9 @@ vector<string> Vehicle::successor_state() {
     if(state.compare("KL") == 0) {
         if(lane != 0) {
             states.push_back("LCL");
-        } else if(lane != lanes_available - 1) {
+        } 
+
+        if(lane != lanes_available - 1) {
             states.push_back("LCR");
         }
     } else if(state.compare("PLCL") == 0) {
@@ -139,16 +142,17 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
     Vehicle vehicle_behind;
 
     if(get_vehicle_ahead(predictions, lane, vehicle_ahead)) {
-        //double max_velocity_in_front = (vehicle_ahead.s - this->s - 2 * preferred_buffer) / dt + vehicle_ahead.v - 0.5 * this->a * dt;
-        //new_velocity = min(min(max_velocity_in_front, max_velocity_accel_limit), this->target_speed);
+        double max_velocity_in_front;
+        double gap = vehicle_ahead.s - this->s - 3 * preferred_buffer;
 
-        if(vehicle_ahead.v < this->v) {
-            new_velocity = this->v - 0.2;
-            //new_velocity = vehicle_ahead.v;
+        if(gap < 0) {
+            max_velocity_in_front = -this->max_acceleration * dt + this->v;
         } else {
-            new_velocity = this->v;
+            max_velocity_in_front = (gap + vehicle_ahead.v * dt + 0.5 * this->v * dt) / (1.5 * dt);
         }
-       // cout<< endl <<"Debug: vehicle_ahead.v = " << vehicle_ahead.v << endl << endl;
+
+        new_velocity = min(min(max_velocity_in_front, max_velocity_accel_limit), this->target_speed);
+        cout << "Debug: max_v_accel = " << max_velocity_accel_limit << ",\t max_v_front = " << max_velocity_in_front << ",\t new_v = " << new_velocity << endl;
     } else {
         new_velocity = min(max_velocity_accel_limit, this->target_speed);
     }
@@ -289,7 +293,7 @@ bool Vehicle::get_vehicle_ahead(map<int, vector<Vehicle>> predictions, int lane,
     */
 
     //double min_s = this->goal_s;
-    double min_s = this->s + 60;        // only account for vehicles 30m ahead.
+    double min_s = this->s + 60;        // only account for vehicles 60m ahead.
     bool found_vehicle = false;
     Vehicle temp_vehicle;
     double ub = this->s;

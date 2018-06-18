@@ -48,7 +48,7 @@ public:
     */
     virtual ~Vehicle();
 
-    vector<Vehicle> choose_next_state(vector<vector<double>> sensor_fusion);
+    vector<Vehicle> choose_next_state(vector<vector<double>> sensor_fusion, int prev_size);
 
     vector<string> successor_state();
 

@@ -13,7 +13,7 @@ public:
 
     map<string, int> lane_direction = {{"PLCL", -1}, {"LCL", -1}, {"LCR", 1}, {"PLCR", 1}};
 
-    double preferred_buffer = 6;   // impact "keep lane" behavior
+    double preferred_buffer = 10;   // impact "keep lane" behavior
 
     int lane;
 

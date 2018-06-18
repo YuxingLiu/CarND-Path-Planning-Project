@@ -53,10 +53,10 @@ double lane_speed(const Vehicle & vehicle, const map<int, vector<Vehicle>> & pre
     If a vehicle is found ahead of the ego vehicle in a lane (within certain range), lane speed is the traffic speed.
     */
 
-    double min_s = vehicle.s + 30;
+    double min_s = vehicle.s + 60;
+    bool found_vehicle = false;
     Vehicle vehicle_ahead;
     Vehicle temp_vehicle;
-    bool found_vehicle = false;
 
     for(map<int, vector<Vehicle>>::const_iterator it = predictions.begin(); it != predictions.end(); ++it) {
         temp_vehicle = it->second[0];
@@ -72,7 +72,7 @@ double lane_speed(const Vehicle & vehicle, const map<int, vector<Vehicle>> & pre
     }
 
     // Fount no vehicle in the lane.
-    return -1.0;
+    return vehicle.target_speed;
 }
 
 double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, const vector<Vehicle> & trajectory) {
@@ -107,9 +107,9 @@ map<string, double> get_helper_data(const Vehicle & vehicle, const vector<Vehicl
     double intended_lane;
 
     if(trajectory_last.state.compare("PLCL") == 0) {
-        intended_lane = trajectory_last.lane + 1;
-    } else if(trajectory_last.state.compare("PLCR") == 0) {
         intended_lane = trajectory_last.lane - 1;
+    } else if(trajectory_last.state.compare("PLCR") == 0) {
+        intended_lane = trajectory_last.lane + 1;
     } else {
         intended_lane = trajectory_last.lane;
     }

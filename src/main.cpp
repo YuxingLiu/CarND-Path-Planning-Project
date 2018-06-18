@@ -219,7 +219,7 @@ int main() {
 
   // ego vehicle configuration
   double max_v = 49.5 / 2.24;   // m/s
-  double max_a = 6;    // m/s2
+  double max_a = 5;    // m/s2
   int num_lanes = 3;
   vector<double> ego_config = {max_v, double(num_lanes), max_s, double(lane), max_a};
   Vehicle ego = Vehicle(lane, 0, ref_vel/2.24, 0, car_state);
@@ -291,7 +291,7 @@ int main() {
                         // project s value forward in time (to compensate measurement latency)
                         check_car_s += ((double)prev_size * .02 * check_speed);
                         // check s values greater than mine and s gap
-                        if(check_car_s > car_s && check_car_s < car_s + 30)
+                        if(check_car_s > car_s && check_car_s < car_s + 45)
                         {
                             //ref_vel = 29.5; //mph
                             too_close = true;

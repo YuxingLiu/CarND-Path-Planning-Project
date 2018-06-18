@@ -87,7 +87,7 @@ vector<string> Vehicle::successor_state() {
     if(state.compare("KL") == 0) {
         if(lane != 0) {
             states.push_back("LCL");
-        } 
+        }
 
         if(lane != lanes_available - 1) {
             states.push_back("LCR");
@@ -139,11 +139,10 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
     double new_velocity;
     double new_accel;
     Vehicle vehicle_ahead;
-    Vehicle vehicle_behind;
 
     if(get_vehicle_ahead(predictions, lane, vehicle_ahead)) {
         double max_velocity_in_front;
-        double gap = vehicle_ahead.s - this->s - 3 * preferred_buffer;
+        double gap = vehicle_ahead.s - this->s - 2 * preferred_buffer;
 
         if(gap < 0) {
             max_velocity_in_front = -this->max_acceleration * dt + this->v;
@@ -276,7 +275,7 @@ bool Vehicle::get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane
             max_s = temp_vehicle.s;
 
             // check if it is too close to the ego vehicle
-            if(temp_vehicle.s > lb || temp_vehicle.s + temp_vehicle.v > lb) {
+            if(temp_vehicle.s > lb || temp_vehicle.s + temp_vehicle.v * dt * 50 > lb) {
                 rVehicle = temp_vehicle;
                 found_vehicle = true;
             }

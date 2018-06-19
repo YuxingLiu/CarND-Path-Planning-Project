@@ -13,7 +13,7 @@ const double EFFICIENCY = pow(10, 2);
 
 double goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, double> & data) {
     /*
-    Cost increases based on distance of intended lane and final lane of trajectory.
+    Cost increases based on distance of final lane of trajectory.
     Cost of being out of goal lane becomes larger as vehicle approaches goal distance.
     */
 
@@ -21,7 +21,7 @@ double goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & traje
     double distance = data["distance_to_goal"];
 
     if(distance > 0) {
-        cost = 1 - 2*exp(-abs(2.0*vehicle.goal_lane - data["intended_lane"] - data["final_lane"]) / distance);
+        cost = 1 - exp(-abs(vehicle.goal_lane - data["final_lane"]) / distance);
     } else {
         cost = 1;
     }
@@ -31,20 +31,13 @@ double goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & traje
 
 double inefficiency_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, double> & data) {
     /*
-    Cost becomes higher for trajectories with intended lane and final lane that have traffic slower than target speed.
+    Cost becomes higher for trajectories with final lane that have traffic slower than target speed.
     */
 
-    double proposed_speed_intended = lane_speed(vehicle, predictions, data["intended_lane"]);
-    if(proposed_speed_intended < 0) {
-        proposed_speed_intended = vehicle.target_speed;
-    }
+    //double proposed_speed_final = lane_speed(vehicle, predictions, data["final_lane"]);
+    double proposed_speed_final = trajectory[1].v;
 
-    double proposed_speed_final = lane_speed(vehicle, predictions, data["final_lane"]);
-    if(proposed_speed_final < 0) {
-        proposed_speed_final = vehicle.target_speed;
-    }
-
-    double cost = (2.0*vehicle.target_speed - proposed_speed_intended - proposed_speed_final) / vehicle.target_speed;
+    double cost = (vehicle.target_speed - proposed_speed_final) / vehicle.target_speed;
     return cost;
 }
 

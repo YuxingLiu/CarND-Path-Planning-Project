@@ -89,16 +89,6 @@ vector<string> Vehicle::successor_state() {
         if(lane != lanes_available - 1) {
             states.push_back("LCR");
         }
-    } else if(state.compare("PLCL") == 0) {
-        if(lane != 0) {
-            states.push_back("PLCL");
-            states.push_back("LCL");
-        }
-    } else if(state.compare("PLCR") == 0) {
-        if(lane != lanes_available - 1) {
-            states.push_back("PLCR");
-            states.push_back("LCR");
-        }
     }
 
     // If state is "LCL" or "LCR", just return "KL"
@@ -118,8 +108,6 @@ vector<Vehicle> Vehicle::generate_trajectory(string state, map<int, vector<Vehic
         trajectory = keep_lane_trajectory(predictions);
     } else if(state.compare("LCL") == 0 || state.compare("LCR") == 0) {
         trajectory = lane_change_trajectory(state, predictions);
-    } else if(state.compare("PLCL") == 0 || state.compare("PLCR") == 0) {
-        trajectory = prep_lane_change_trajectory(state, predictions);
     }
 
     return trajectory;
@@ -195,45 +183,6 @@ vector<Vehicle> Vehicle::keep_lane_trajectory(map<int, vector<Vehicle>> predicti
     return trajectory;
 }
 
-vector<Vehicle> Vehicle::prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions) {
-    /*
-    Generate a trajectory preparing for a lane change.
-    */
-
-    double new_s;
-    double new_v;
-    double new_a;
-    // Vehicle vehicle_behind;
-    int new_lane = this->lane + lane_direction[state];
-    vector<Vehicle> trajectory = {Vehicle(this->lane, this->s, this->v, this->a, this->state)};
-    vector<double> curr_lane_new_kinematics = get_kinematics(predictions, this->lane);
-
-/*    if(get_vehicle_behind(predictions, this->lane, vehicle_behind)) {
-        // Keep speed of current lane so as not to collide with car behind.
-        new_s = curr_lane_new_kinematics[0];
-        new_v = curr_lane_new_kinematics[1];
-        new_a = curr_lane_new_kinematics[2];
-    } else {
-*/
-        vector<double> best_kinematics;
-        vector<double> next_lane_new_kinematics = get_kinematics(predictions, new_lane);
-
-        // Choose kinematics with lowest velocity.
-        if(next_lane_new_kinematics[1] < curr_lane_new_kinematics[1]) {
-            best_kinematics = next_lane_new_kinematics;
-        } else {
-            best_kinematics = curr_lane_new_kinematics;
-        }
-
-        new_s = best_kinematics[0];
-        new_v = best_kinematics[1];
-        new_a = best_kinematics[2];
-    //}
-
-    trajectory.push_back(Vehicle(this->lane, new_s, new_v, new_a, state));
-    return trajectory;
-}
-
 vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions) {
     /*
     Generate a lane change trajectory
@@ -243,7 +192,7 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
     vector<Vehicle> trajectory;
     Vehicle next_lane_vehicle;
 
-    // Check if a lane change is possible (if another vehicle occupies that spot).
+    // Check if a lane change is possible (if the behind vehicle is too close).
     if(get_vehicle_behind(predictions, new_lane, next_lane_vehicle)) {
         // If lane change is not possible, return empty trajectory.
         return trajectory;
@@ -262,7 +211,7 @@ double Vehicle::position_at(double t) {
 
 bool Vehicle::get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane, Vehicle & rVehicle) {
     /*
-    Return true if a vehicle is found behind the curretn vehicle, false otherwise.
+    Return true if a vehicle is found behind the curretn vehicle, and the distance is too small, false otherwise.
     The passed reference rVehicle is updated if a vehicle is found.
     */
 
@@ -289,7 +238,7 @@ bool Vehicle::get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane
 
 bool Vehicle::get_vehicle_ahead(map<int, vector<Vehicle>> predictions, int lane, Vehicle & rVehicle) {
     /*
-    Return true if a vehicle is found ahead of the curretn vehicle, false otherwise.
+    Return true if a vehicle is found ahead of the curretn vehicle within a certain range, false otherwise.
     The passed reference rVehicle is updated if a vehicle is found.
     */
 

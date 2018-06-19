@@ -11,7 +11,7 @@ using namespace std;
 class Vehicle {
 public:
 
-    map<string, int> lane_direction = {{"PLCL", -1}, {"LCL", -1}, {"LCR", 1}, {"PLCR", 1}};
+    map<string, int> lane_direction = {{"LCL", -1}, {"LCR", 1}};
 
     double preferred_buffer = 10;   // impact "keep lane" behavior
 
@@ -63,8 +63,6 @@ public:
     vector<Vehicle> keep_lane_trajectory(map<int, vector<Vehicle>> predictions);
 
     vector<Vehicle> lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
-
-    vector<Vehicle> prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
     double position_at(double t);
 

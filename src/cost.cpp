@@ -91,29 +91,16 @@ double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> &
 
 map<string, double> get_helper_data(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions) {
     /*
-    Generate helper data to use in cost function:
-        intended_lane: +/- 1 from current lane if the vehicle is planning or executing a lane change.
-        final_lane: The lane of the vehicle at the end of the trajectory. Unchanged for KL and PLCL/PLCR.
-        distance_to_goal: The s distance of the vehicle to the goal.
+    Generate helper data to use in cost function.
     */
 
     map<string, double> trajectory_data;
     Vehicle trajectory_last = trajectory[1];
-/*    double intended_lane;
-
-    if(trajectory_last.state.compare("PLCL") == 0) {
-        intended_lane = trajectory_last.lane - 1;
-    } else if(trajectory_last.state.compare("PLCR") == 0) {
-        intended_lane = trajectory_last.lane + 1;
-    } else {
-        intended_lane = trajectory_last.lane;
-    }*/
 
     double distance_to_goal = vehicle.goal_s - trajectory_last.s;
     double final_lane = trajectory_last.lane;
     double final_speed = trajectory_last.v;
 
-    //trajectory_data["intended_lane"] = intended_lane;
     trajectory_data["distance_to_goal"] = distance_to_goal;
     trajectory_data["final_lane"] = final_lane;
     trajectory_data["final_speed"] = final_speed;

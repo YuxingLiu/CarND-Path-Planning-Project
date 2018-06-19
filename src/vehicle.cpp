@@ -262,20 +262,18 @@ bool Vehicle::get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane
     The passed reference rVehicle is updated if a vehicle is found.
     */
 
-    //double max_s = -1;
     double max_s = this->s - 30;        // only account for vehicles 30m behind.
     bool found_vehicle = false;
     Vehicle temp_vehicle;
-    double ub = this->s + preferred_buffer;
-    double lb = this->s - preferred_buffer;
 
     for(map<int, vector<Vehicle>>::iterator it = predictions.begin(); it != predictions.end(); ++it) {
         temp_vehicle = it->second[0];
-        if(temp_vehicle.lane == lane && temp_vehicle.s < ub && temp_vehicle.s > max_s) {
+        if(temp_vehicle.lane == lane && temp_vehicle.s < this->s && temp_vehicle.s > max_s) {
             max_s = temp_vehicle.s;
+            double gap = this->s - temp_vehicle.s;
 
             // check if it is too close to the ego vehicle
-            if(temp_vehicle.s > lb || temp_vehicle.s + temp_vehicle.v * dt * 50 > lb) {
+            if((gap < preferred_buffer && temp_vehicle.v > this->v) || gap < 0.5 * preferred_buffer) {
                 rVehicle = temp_vehicle;
                 found_vehicle = true;
             }
@@ -291,17 +289,13 @@ bool Vehicle::get_vehicle_ahead(map<int, vector<Vehicle>> predictions, int lane,
     The passed reference rVehicle is updated if a vehicle is found.
     */
 
-    //double min_s = this->goal_s;
     double min_s = this->s + 60;        // only account for vehicles 60m ahead.
     bool found_vehicle = false;
     Vehicle temp_vehicle;
-    double ub = this->s;
 
     for(map<int, vector<Vehicle>>::iterator it = predictions.begin(); it != predictions.end(); ++it) {
         temp_vehicle = it->second[0];
-
-        // add a buffer for a safe lane change
-        if(temp_vehicle.lane == lane && temp_vehicle.s > ub && temp_vehicle.s < min_s) {
+        if(temp_vehicle.lane == lane && temp_vehicle.s > this->s && temp_vehicle.s < min_s) {
             min_s = temp_vehicle.s;
             rVehicle = temp_vehicle;
             found_vehicle = true;

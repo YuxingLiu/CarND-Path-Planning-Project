@@ -298,7 +298,6 @@ int main() {
                         if(check_car_s > car_s && check_car_s < car_s + 45)
                         {
                             too_close = true;
-                            cout << "Debug: too close!\t Vid = " << sensor_fusion[i][0] << ",\t s = " << sensor_fusion[i][5] << ",\t s+ = " << check_car_s << ",\t prev_size = " << prev_size << endl;
                         }
                     }
                 }
@@ -333,7 +332,7 @@ int main() {
                     }
                 }
 
-                cout << "Lane: " << lane << ",\t v_ref: " << ref_vel << ",\t car.v: " << car_speed << ",\t car.s = " << car_s << ",\t state: " << ego.state << endl << endl;
+                cout << "Lane: " << lane << ",\t ref_vel: " << ref_vel << ",\t car_s: " << car_s << ",\t state: " << ego.state << endl << endl;
 
                 // create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
                 // later, interpolate these waypoints with a spline and fill in iwth more points that control speed

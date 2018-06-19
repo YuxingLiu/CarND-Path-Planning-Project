@@ -48,7 +48,6 @@ vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion,
         Vehicle veh = Vehicle(lanei, si, vi, 0, "CS");     // Assume constant speed in prediction.
         vector<Vehicle> preds = veh.generate_predictions(horizon);
         predictions[v_id] = preds;
-        cout << "Vid = " << v_id << ",\t d = " << di << ",\t lane = " << lanei << ",\t v = " << vi << ",\t s = " << si << endl;
     }
 
     // Only consider reachable states from current FSM state.
@@ -68,8 +67,6 @@ vector<Vehicle> Vehicle::choose_next_state(vector<vector<double>> sensor_fusion,
 
     vector<double>::iterator best_cost = min_element(costs.begin(), costs.end());
     int best_idx = distance(costs.begin(), best_cost);
-
-    cout << "Debug: costs.size() = " << costs.size() << ",\t states.size() = " << states.size() << ",\t, s = " << this->s << ",\t current state: " << this->state << endl;
 
     return final_trajectories[best_idx];
 }
@@ -156,12 +153,11 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
             // max deceleration
             max_vel_in_front = min_vel;
         } else {
-            // keep distance with ahead vehicle
+            // keep distance to ahead vehicle
             max_vel_in_front = (gap + vehicle_ahead.v * dt + 0.5 * this->v * dt) / (1.5 * dt);
         }
 
         new_velocity = max(min(max_vel_in_front, max_vel), min_vel);
-        cout << "Debug: max_vel = " << max_vel << ",\t max_v_front = " << max_vel_in_front << ",\t new_v = " << new_velocity << endl;
     } else {
         new_velocity = max_vel;
     }
@@ -253,8 +249,6 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
         return trajectory;
     }
 
-    cout<< "Debug: " << state << " is feasible!" << endl;
-
     trajectory.push_back(Vehicle(this->lane, this->s, this->v, this->a, this->state));
     vector<double> kinematics = get_kinematics(predictions, new_lane);
     trajectory.push_back(Vehicle(new_lane, kinematics[0], kinematics[1], kinematics[2], state));
@@ -312,10 +306,6 @@ bool Vehicle::get_vehicle_ahead(map<int, vector<Vehicle>> predictions, int lane,
         }
     }
 
-    if(found_vehicle) {
-        cout << "Debug: found vehine in lane " << lane << ",\t vehicle.state = " << rVehicle.state << ",\t vehicle_ahead.v = " << rVehicle.v << ",\t gap = " << rVehicle.s - this->s << endl;
-    }
-
     return found_vehicle;
 }
 
@@ -349,7 +339,7 @@ void Vehicle::realize_next_state(vector<Vehicle> trajectory) {
 
 void Vehicle::configure(vector<double> road_data) {
     /*
-    called before simulation begins.
+    Called before simulation begins.
     Set various parameters which will impact the ego vehicle.
     */
 
@@ -362,6 +352,9 @@ void Vehicle::configure(vector<double> road_data) {
 }
 
 void Vehicle::update(int lane, double s, double v, double a) {
+    /*
+    Update ego vehicle's states when new measurement is available.
+    */
 
     this->lane = lane;
     this->s = s;

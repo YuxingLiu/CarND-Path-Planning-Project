@@ -220,7 +220,7 @@ int main() {
 
   // ego vehicle configuration
   double max_v = 49.5 / 2.24;   // m/s
-  double max_a = 8;             // m/s2
+  double max_a = 5;             // m/s2
   double max_jerk = 8;          // m/s3
   int num_lanes = 3;
   vector<double> ego_config = {max_v, double(num_lanes), max_s, double(lane), max_a, max_jerk};

@@ -9,6 +9,7 @@
 // Set weights for cost functions.
 const double REACH_GOAL = pow(10, 0);
 const double EFFICIENCY = pow(10, 2);
+const double DIST_AHEAD = pow(10, 2);
 
 
 double goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, double> & data) {
@@ -31,23 +32,30 @@ double goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & traje
 
 double inefficiency_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, double> & data) {
     /*
-    Cost becomes higher for trajectories with final lane that have traffic slower than target speed.
+    Cost becomes higher for trajectories with small final speed.
     */
 
-    //double proposed_speed_final = lane_speed(vehicle, predictions, data["final_lane"]);
-    double proposed_speed_final = trajectory[1].v;
-
-    double cost = (vehicle.target_speed - proposed_speed_final) / vehicle.target_speed;
+    double cost = (vehicle.target_speed - data["final_speed"]) / vehicle.target_speed;
     return cost;
 }
 
-double lane_speed(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, int lane) {
+double ahead_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, double> & data) {
     /*
-    If a vehicle is found ahead of the ego vehicle in a lane (within certain range), lane speed is the traffic speed.
+    Cost becomes higher for trajectories with small distance to the front vehicle.
+    */
+
+    double gap = get_ahead_distance(vehicle, predictions, data["final_lane"]);
+    double cost = 1 - gap / 60;
+
+    return cost;
+}
+
+double get_ahead_distance(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, int lane) {
+    /*
+    Calculate the distance to a vehicle ahead of the ego vehicle in a lane (within certain range).
     */
 
     double min_s = vehicle.s + 60;
-    bool found_vehicle = false;
     Vehicle vehicle_ahead;
     Vehicle temp_vehicle;
 
@@ -56,16 +64,10 @@ double lane_speed(const Vehicle & vehicle, const map<int, vector<Vehicle>> & pre
         if(temp_vehicle.lane == lane && temp_vehicle.s > vehicle.s && temp_vehicle.s < min_s) {
             min_s = temp_vehicle.s;
             vehicle_ahead = temp_vehicle;
-            found_vehicle = true;
         }
     }
 
-    if(found_vehicle) {
-        return vehicle_ahead.v;
-    }
-
-    // Fount no vehicle in the lane.
-    return vehicle.target_speed;
+    return min_s - vehicle.s;
 }
 
 double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> & predictions, const vector<Vehicle> & trajectory) {
@@ -76,8 +78,8 @@ double calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> &
     map<string, double> trajectory_data = get_helper_data(vehicle, trajectory, predictions);
     double cost = 0.0;
 
-    vector< function<double(const Vehicle &, const vector<Vehicle> &, const map<int, vector<Vehicle>> &, map<string, double> &)>> cf_list = {goal_distance_cost, inefficiency_cost};
-    vector<double> weight_list = {REACH_GOAL, EFFICIENCY};
+    vector< function<double(const Vehicle &, const vector<Vehicle> &, const map<int, vector<Vehicle>> &, map<string, double> &)>> cf_list = {goal_distance_cost, inefficiency_cost, ahead_distance_cost};
+    vector<double> weight_list = {REACH_GOAL, EFFICIENCY, DIST_AHEAD};
 
     for(int i = 0; i < cf_list.size(); i++) {
         double new_cost = weight_list[i] * cf_list[i](vehicle, trajectory, predictions, trajectory_data);
@@ -97,7 +99,7 @@ map<string, double> get_helper_data(const Vehicle & vehicle, const vector<Vehicl
 
     map<string, double> trajectory_data;
     Vehicle trajectory_last = trajectory[1];
-    double intended_lane;
+/*    double intended_lane;
 
     if(trajectory_last.state.compare("PLCL") == 0) {
         intended_lane = trajectory_last.lane - 1;
@@ -105,13 +107,16 @@ map<string, double> get_helper_data(const Vehicle & vehicle, const vector<Vehicl
         intended_lane = trajectory_last.lane + 1;
     } else {
         intended_lane = trajectory_last.lane;
-    }
+    }*/
 
     double distance_to_goal = vehicle.goal_s - trajectory_last.s;
     double final_lane = trajectory_last.lane;
-    trajectory_data["intended_lane"] = intended_lane;
-    trajectory_data["final_lane"] = final_lane;
+    double final_speed = trajectory_last.v;
+
+    //trajectory_data["intended_lane"] = intended_lane;
     trajectory_data["distance_to_goal"] = distance_to_goal;
+    trajectory_data["final_lane"] = final_lane;
+    trajectory_data["final_speed"] = final_speed;
 
     return trajectory_data;
 }

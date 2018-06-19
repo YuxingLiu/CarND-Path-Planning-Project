@@ -29,6 +29,8 @@ public:
 
     double max_acceleration;
 
+    double max_jerk;
+
     int goal_lane;
 
     double goal_s;
@@ -76,7 +78,7 @@ public:
 
     void configure(vector<double> road_data);
 
-    void update(int lane, double s, double v, double a, string state = "KL");
+    void update(int lane, double s, double v, double a);
 
 };
 

@@ -134,26 +134,36 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
     Try to choose max velocity and accel, given other vehicle positions and accel/velocity constrtaints.
     */
 
-    double max_velocity_accel_limit = this->max_acceleration * dt + this->v;
     double new_position;
     double new_velocity;
     double new_accel;
     Vehicle vehicle_ahead;
 
+    // Calculate acceleration limits.
+    double max_accel = min(this->a + this->max_jerk * dt,  this->max_acceleration);
+    double min_accel = max(this->a - this->max_jerk * dt, -this->max_acceleration);
+
+    // Calculate velocity limits.
+    double max_vel = min(this->v + max_accel * dt, this->target_speed);
+    double min_vel = max(this->v + min_accel * dt, 0.0);
+
+    // Update velocity according to the distance to the ahead vehicle.
     if(get_vehicle_ahead(predictions, lane, vehicle_ahead)) {
-        double max_velocity_in_front;
-        double gap = vehicle_ahead.s - this->s - 2 * preferred_buffer;
+        double max_vel_in_front;
+        double gap = vehicle_ahead.s - this->s - 3 * preferred_buffer;
 
         if(gap < 0) {
-            max_velocity_in_front = -this->max_acceleration * dt + this->v;
+            // max deceleration
+            max_vel_in_front = min_vel;
         } else {
-            max_velocity_in_front = (gap + vehicle_ahead.v * dt + 0.5 * this->v * dt) / (1.5 * dt);
+            // keep distance with ahead vehicle
+            max_vel_in_front = (gap + vehicle_ahead.v * dt + 0.5 * this->v * dt) / (1.5 * dt);
         }
 
-        new_velocity = min(min(max_velocity_in_front, max_velocity_accel_limit), this->target_speed);
-        cout << "Debug: max_v_accel = " << max_velocity_accel_limit << ",\t max_v_front = " << max_velocity_in_front << ",\t new_v = " << new_velocity << endl;
+        new_velocity = max(min(max_vel_in_front, max_vel), min_vel);
+        cout << "Debug: max_vel = " << max_vel << ",\t max_v_front = " << max_vel_in_front << ",\t new_v = " << new_velocity << endl;
     } else {
-        new_velocity = min(max_velocity_accel_limit, this->target_speed);
+        new_velocity = max_vel;
     }
 
     new_accel = (new_velocity - this->v) / dt;
@@ -348,13 +358,13 @@ void Vehicle::configure(vector<double> road_data) {
     goal_s = road_data[2];
     goal_lane = road_data[3];
     max_acceleration = road_data[4];
+    max_jerk = road_data[5];
 }
 
-void Vehicle::update(int lane, double s, double v, double a, string state) {
+void Vehicle::update(int lane, double s, double v, double a) {
 
     this->lane = lane;
     this->s = s;
     this->v = v;
     this->a = a;
-    this->state = state;
 }

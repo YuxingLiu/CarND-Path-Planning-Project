@@ -3,13 +3,13 @@
 
 The goal of this project is to design a path planner in C++ that is able to create smooth, safe paths for the car to follow along a 3 lane highway with traffic in a [simulator](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2). The path planner is able to keep inside its lane, avoid hitting other cars, and pass slower moving traffic all by using localization, sensor fusion, and map data.
 
-The path planner consists of two modules: behavior planning and trajectory generation. When no vehicle is found ahead of the ego vehicle, the reference speed gradually increases to 50 mph and lane is unchanged. When it is too close to the ahead vehicle, a finite state machine is activated to update reference speed and lane, according to a set of cost functions and safety constraints. Given the next step reference speed and lane, spline fitting is used to generate a feasible trajectory. A detailed description of the code used in each module is in the following sections.
+The path planner consists of two modules: behavior planning and trajectory generation. When no vehicle is found ahead of the ego vehicle, the reference speed gradually increases to max value and lane is unchanged. When it is too close to the ahead vehicle, a finite state machine (FSM) is activated to update reference speed and lane, according to a set of cost functions and safety constraints. Given the next step reference speed and lane, spline fitting is used to generate a feasible trajectory. A detailed description of the code used in each module is in the following sections.
 
 ---
 
 ## Behavior Planning
 
-Using localization and sensor fusion data, detect if the ego vehicle is too clsoe to the ahead vehicle:
+Using localization and sensor fusion data, detect if the ego vehicle is too close to the ahead vehicle:
 ```cpp
 for(int i=0; i < sensor_fusion.size(); i++)
 {
@@ -33,9 +33,46 @@ for(int i=0; i < sensor_fusion.size(); i++)
     }
 }
 ```
-Note that in the first if statement, `car_d` is used to calculate the lateral distance, instead of `lane`. 
+Note that in the first if statement, `car_d` is used to calculate the lateral distance, instead of `lane`. This can also cover the case when vehicle is chaning lanes. Due to a measurement latency of about 1 sec, a larger 45 m gap is used.
 
-When no vehicle is found ahead of the ego vehicle, the reference speed gradually increases to 50 mph and lane is unchanged.
+When `too_close` is true and `lane_change` is false, activate the FMS to prepare for lane change:
+```cpp
+if(too_close && lane_change == false)
+{
+    ego.update(lane, car_s, car_v, car_a);
+    vector<Vehicle> trajectory = ego.choose_next_state(sensor_fusion, prev_size);
+    ego.realize_next_state(trajectory);
+    ref_vel = ego.v * 2.24;
+    if(ego.lane != lane) {
+        lane = ego.lane;
+        lane_change = true;
+    }
+}
+```
+If `lane_change ` is true, adjust the speed if necessary and follow a smooth lane changing path. When the ego vehicle is in the new lane, reset FSM and `lane_change` flag:
+```cpp
+else if(lane_change) {
+    if(car_d > 4*lane && car_d < 4+4*lane) {
+        lane_change = false;
+        ego.state = "KL";
+    }
+
+    if(too_close) {
+        ref_vel -= .224;
+    }
+}
+```
+If no vehicle ahead, keep the current lane and accelerate up to max speed:
+```cpp
+else
+{
+    if(ref_vel < 49.5) {
+        ref_vel += .224;
+    }
+}
+```
+
+
 ```cpp
 
 ```

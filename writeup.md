@@ -62,7 +62,7 @@ else if(lane_change) {
     }
 }
 ```
-If no vehicle ahead, keep the current lane and accelerate up to max speed:
+If no vehicle ahead, stay at current lane and accelerate up to max speed:
 ```cpp
 else
 {
@@ -72,7 +72,14 @@ else
 }
 ```
 
+To implement the FSM, a class `Vehicle` is used for ego and non-ego vehicles, whose members and methods are defined in [Vehicle.h](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.h).
+
+### Trajectory Generation
+
+
 
 ```cpp
 
 ```
+
+## Trajectory Generation

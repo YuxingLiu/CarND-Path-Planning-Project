@@ -133,6 +133,13 @@ Finally, the state with minimum cost is chosen as the next state of FSM:
     return final_trajectories[best_idx];
 ```
 
+
+### Rough Trajectory Generation
+
+`generate_trajectory()` is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L98) starting at line 98.
+
+If the possible next state is `KL`, `keep_lane_trajectory()`is used, which is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L171) starting at line 171. Otherwise, `lane_change_trajectory()` is called, which is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L186) starting at line 186.
+
 ### Cost Functions
 
 

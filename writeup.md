@@ -73,16 +73,63 @@ else
 ```
 
 To implement the FSM, a class `Vehicle` is used for ego and non-ego vehicles, whose members and methods are defined in [Vehicle.h](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.h). The `Vehicle` class is similar to the one defined in [Behavior Planning Quiz](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/27800789-bc8e-4adc-afe0-ec781e82ceae/lessons/56274ea4-277d-4d1e-bd95-ce5afbad64fd/concepts/2c4a8fdd-4072-425f-b5ae-95849d5fd4d8), where the differences are highlighted as follows:
-1. The FSM only has three states (`KL`, `LCL`, `LCR`). If lane change is infeasible, FSM will stay at `KL` and reevaluate at next sample time. If lane change is feasible, FSM will immediately switch to the goal lane, and the smooth transition is ensured by the trajectory generator.
+1. The FSM only has three states (`KL`, `LCL`, `LCR`). If lane change is infeasible, FSM will stay at `KL` and re- evaluate at next sample time. If lane change is feasible, FSM will immediately switch to the goal lane, and the smooth transition is ensured by the trajectory generator.
 2. The acceleration `a` is updated as a state variable, with consideration of acceleration and jerk limits.
 3. Since the FSM is not always activated, the ego vehicle's `lane`, `s`, `v`, and `a` are reinitialized every sample time by `update()` function.
 4. The positions `s` of ego and non-ego vehicles are compensted for measurement latency at every sample time.
 5. The safety constraints (whether lane change is feasible) are implemented differently, due to the removal of `PLCL` and `PLCR` states.
 6. The distance to ahead vehicle is accounted for in cost functions.
 
-### Cost Functions
+More details can be found in the following subsections.
 
+### Transition Function
 
+The transition function `choose_next_state()` is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L29) starting at line 29.
+
+First, other vehicles are predicted over 1 sec using sensor fusion data, with the assumption of constant speed:
+```cpp
+map<int, vector<Vehicle>> predictions;
+
+for(int i = 0; i < sensor_fusion.size(); i++) {
+    int v_id = sensor_fusion[i][0];
+    double vx = sensor_fusion[i][3];
+    double vy = sensor_fusion[i][4];
+    double vi = sqrt(vx*vx + vy*vy);
+    double si = sensor_fusion[i][5];
+    si += (double)prev_size * dt * vi;      // to compensate measurement latency.
+    double di = sensor_fusion[i][6];
+    int lanei = di / 4;
+    int horizon = 50;       // predict over 1 sec.
+
+    Vehicle veh = Vehicle(lanei, si, vi, 0, "CS");     // Assume constant speed in prediction.
+    vector<Vehicle> preds = veh.generate_predictions(horizon);
+    predictions[v_id] = preds;
+}
+```
+
+Note that the positions of non-ego vehicles `si` are compensted for measurement latency. Then, rough trajectory for each reachable state is generated, and the cost of each state is calculated:
+```cpp
+vector<string> states = successor_state();
+
+vector<double> costs;
+vector<vector<Vehicle>> final_trajectories;
+
+for(int i = 0; i < states.size(); i++) {
+    vector<Vehicle> trajectory = generate_trajectory(states[i], predictions);
+    if(trajectory.size() != 0) {
+        costs.push_back(calculate_cost(*this, predictions, trajectory));
+        final_trajectories.push_back(trajectory);
+    }
+}
+```
+
+Finally, the state with minimum cost is chosen as the next state of FSM:
+```cpp
+    vector<double>::iterator best_cost = min_element(costs.begin(), costs.end());
+    int best_idx = distance(costs.begin(), best_cost);
+
+    return final_trajectories[best_idx];
+```
 
 ### Cost Functions
 

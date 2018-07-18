@@ -107,7 +107,9 @@ for(int i = 0; i < sensor_fusion.size(); i++) {
 }
 ```
 
-Note that the positions of non-ego vehicles `si` are compensted for measurement latency. Then, rough trajectory for each reachable state is generated, and the cost of each state is calculated:
+Note that the positions of non-ego vehicles `si` are compensted for measurement latency. 
+
+Then, rough trajectory for each reachable state is generated, and the cost of each state is calculated:
 ```cpp
 vector<string> states = successor_state();
 

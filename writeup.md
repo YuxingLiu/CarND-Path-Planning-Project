@@ -72,9 +72,17 @@ else
 }
 ```
 
-To implement the FSM, a class `Vehicle` is used for ego and non-ego vehicles, whose members and methods are defined in [Vehicle.h](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.h).
+To implement the FSM, a class `Vehicle` is used for ego and non-ego vehicles, whose members and methods are defined in [Vehicle.h](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.h). The `Vehicle` class is similar to the one defined in [Behavior Planning Quiz](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/27800789-bc8e-4adc-afe0-ec781e82ceae/lessons/56274ea4-277d-4d1e-bd95-ce5afbad64fd/concepts/2c4a8fdd-4072-425f-b5ae-95849d5fd4d8), where the differences are highlighted as follows:
+1. The FSM only has three states (`KL`, `LCL`, `LCR`). If lane change is infeasible, FSM will stay at `KL` and reevaluate at next sample time. If lane change is feasible, FSM will immediately switch to the goal lane, and the smooth transition is ensured by the trajectory generator.
+2. The acceleration `a` is updated as a state variable, with consideration of acceleration and jerk limits.
+3. 
+4. The cost functions account for the distance to goal, the speed at a lane, and the distance to ahead vehicle.
 
-### Trajectory Generation
+### Cost Functions
+
+
+
+### Cost Functions
 
 
 

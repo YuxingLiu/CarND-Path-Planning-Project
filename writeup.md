@@ -140,7 +140,7 @@ Finally, the state with minimum cost is chosen as the next state of FSM:
 
 If the possible next state is `KL`, `keep_lane_trajectory()`is used, which is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L171) starting at line 171. Otherwise, `lane_change_trajectory()` is called, which is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L186) starting at line 186.
 
-In `lane_change_trajectory()`, if the behind vehicle in new lane is too close, return empty trajectory. If not, the next step `s`, `v`, and `a` in the new lane are computed by `get_kinematics()`, with consideration of speed/acceleration/jerk limits, and the distance to the ahead vehicle:
+In `lane_change_trajectory()`, if the behind vehicle in new lane is too close, return empty trajectory. If not, the next step `s`, `v`, and `a` in new lane are computed by `get_kinematics()`, with consideration of speed/acceleration/jerk limits, and the distance to the ahead vehicle in new lane:
 ```cpp
 vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, int lane) {
     /*

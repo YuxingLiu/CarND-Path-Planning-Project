@@ -77,7 +77,7 @@ To implement the FSM, a class `Vehicle` is used for ego and non-ego vehicles, wh
 2. The acceleration `a` is updated as a state variable, with consideration of acceleration and jerk limits.
 3. Since the FSM is not always activated, the ego vehicle's `lane`, `s`, `v`, and `a` are reinitialized every sample time by `update()` function.
 4. The positions `s` of ego and non-ego vehicles are compensted for measurement latency at every sample time.
-5. The safety constraints (whether lane change is feasible) are implemented differently, due to the removal of `PLCL` and `PLCR` states.
+5. The safety constraints for lane change are implemented differently, due to the removal of `PLCL` and `PLCR` states.
 6. The distance to ahead vehicle is accounted for in cost functions.
 
 More details can be found in the following subsections.
@@ -139,6 +139,58 @@ Finally, the state with minimum cost is chosen as the next state of FSM:
 `generate_trajectory()` is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L98) starting at line 98.
 
 If the possible next state is `KL`, `keep_lane_trajectory()`is used, which is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L171) starting at line 171. Otherwise, `lane_change_trajectory()` is called, which is defined in [Vehicle.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L186) starting at line 186.
+
+In `lane_change_trajectory()`, if the behind vehicle in new lane is too close, return empty trajectory. If not, the next step `s`, `v`, and `a` in the new lane are computed by `get_kinematics()`, with consideration of speed/acceleration/jerk limits, and the distance to the ahead vehicle:
+```cpp
+vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, int lane) {
+    /*
+    Get next timestep kinematics (position, velocity, acceleration) for a given lane.
+    Try to choose max velocity and accel, given other vehicle positions and accel/velocity constrtaints.
+    */
+
+    double new_position;
+    double new_velocity;
+    double new_accel;
+    Vehicle vehicle_ahead;
+
+    // Calculate acceleration limits.
+    double max_accel = min(this->a + this->max_jerk * dt,  this->max_acceleration);
+    double min_accel = max(this->a - this->max_jerk * dt, -this->max_acceleration);
+
+    // Calculate velocity limits.
+    double max_vel = min(this->v + max_accel * dt, this->target_speed);
+    double min_vel = max(this->v + min_accel * dt, 0.0);
+
+    // Update velocity according to the distance to the ahead vehicle.
+    if(get_vehicle_ahead(predictions, lane, vehicle_ahead)) {
+        double max_vel_in_front;
+        double gap = vehicle_ahead.s - this->s - 3 * preferred_buffer;
+
+        if(gap < 0) {
+            // max deceleration
+            max_vel_in_front = min_vel;
+        } else {
+            // keep distance to ahead vehicle
+            max_vel_in_front = (gap + vehicle_ahead.v * dt + 0.5 * this->v * dt) / (1.5 * dt);
+        }
+
+        new_velocity = max(min(max_vel_in_front, max_vel), min_vel);
+    } else {
+        new_velocity = max_vel;
+    }
+
+    new_accel = (new_velocity - this->v) / dt;
+    new_position = this->s + new_velocity * dt + 0.5 * new_accel * dt * dt;
+
+    return {new_position, new_velocity, new_accel};
+}
+```
+
+
+
+
+
+### Safety Constraints for Lane Change
 
 ### Cost Functions
 

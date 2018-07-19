@@ -194,6 +194,14 @@ To keep constant distance to ahead vehicle, `max_vel_in_front` is calculated bas
 
 ### Safety Constraints for Lane Change
 
+To ensure the ego vehicle do not have collisions, multiple ranges are applied, which are summarized as follows:
+
+| Range     | Meaning   | Action | Location |
+|:---:      |:-----:|:-----:|:-----:| 
+| (0, 60) | search range for ahead vehicle   | find the closest ahead vehicle |   [Vehicle.cpp line 245](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L245) |
+| (0, 45) | ego is close to ahead vehicle   | activate FSM |   [main.cpp line 298](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/main.cpp#L298) |
+| (0, 30) | ego is too close to ahead vehicle   | decelerate |   [Vehicle.cpp line 138](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L138) |
+
 ### Cost Functions
 
 

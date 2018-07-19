@@ -205,7 +205,29 @@ To ensure the ego vehicle do not have collisions, multiple ranges are applied, w
 | (-10, -5] | too close to behind vehicle if speed is lower  | prohibit lane change |   [Vehicle.cpp line 229](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L229) |
 | (-30, 0) | search range for behind vehicle | find the closest behind vehicle |   [Vehicle.cpp line 218](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L218) |
 
-In addition, the distance to ahead vehicle is considered in the cost function, which escentially becomes a soft constraints to prevent lane change if too close to ahead vehicle. `ahead_distance_cost()` is defined in [cost.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/cost.cpp#L42) starting at line 42.
+In addition, the distance to ahead vehicle is considered in the cost function, which escentially becomes a soft constraints to prevent lane change if too close to ahead vehicle. 
+
+
+### Cost Functions
+
+`goal_distance_cost()` is defined in [cost.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/cost.cpp#L15) starting at line 15.
+```cpp
+double cost;
+double distance = data["distance_to_goal"];
+
+if(distance > 0) {
+    cost = 1 - exp(-abs(vehicle.goal_lane - data["final_lane"]) / distance);
+} else {
+    cost = 1;
+}
+```
+
+`inefficiency_cost()` is defined in [cost.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/cost.cpp#L33) starting at line 33.
+```cpp
+double cost = (vehicle.target_speed - data["final_speed"]) / vehicle.target_speed;
+```
+
+`ahead_distance_cost()` is defined in [cost.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/cost.cpp#L42) starting at line 42.
 ```cpp
 double gap = get_ahead_distance(vehicle, predictions, data["final_lane"]);
 double cost = 1 - gap / 60;

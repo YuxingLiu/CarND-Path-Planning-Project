@@ -5,6 +5,9 @@ The goal of this project is to design a path planner in C++ that is able to crea
 
 The path planner consists of two modules: behavior planning and trajectory generation. When no vehicle is found ahead of the ego vehicle, the reference speed gradually increases to max value and lane is unchanged. When it is too close to the ahead vehicle, a finite state machine (FSM) is activated to update reference speed and lane, according to a set of cost functions and safety constraints. Given the next step reference speed and lane, spline fitting is used to generate a feasible trajectory. A detailed description of the code used in each module is in the following sections.
 
+
+[image1]: ./images/max_vel_in_front.png
+
 ---
 
 ## Behavior Planning
@@ -186,9 +189,8 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
 }
 ```
 
-
-
-
+To keep constant distance to ahead vehicle, `max_vel_in_front` is calculated based on following equations:
+![alt text][image1]
 
 ### Safety Constraints for Lane Change
 

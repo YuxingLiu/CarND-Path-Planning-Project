@@ -205,12 +205,18 @@ To ensure the ego vehicle do not have collisions, multiple ranges are applied, w
 | (-10, -5] | too close to behind vehicle if speed is lower  | prohibit lane change |   [Vehicle.cpp line 229](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L229) |
 | (-30, 0) | search range for behind vehicle | find the closest behind vehicle |   [Vehicle.cpp line 218](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/vehicle.cpp#L218) |
 
-### Cost Functions
-
-
-
+In addition, the distance to ahead vehicle is considered in the cost function, which escentially becomes a soft constraints to prevent lane change if too close to ahead vehicle.
 ```cpp
+double ahead_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, double> & data) {
+    /*
+    Cost becomes higher for trajectories with small distance to the front vehicle.
+    */
 
+    double gap = get_ahead_distance(vehicle, predictions, data["final_lane"]);
+    double cost = 1 - gap / 60;
+
+    return cost;
+}
 ```
 
 ## Trajectory Generation

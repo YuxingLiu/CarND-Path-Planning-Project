@@ -7,6 +7,7 @@ The path planner consists of two modules: behavior planning and trajectory gener
 
 
 [image1]: ./images/max_vel_in_front.png
+[image2]: ./images/5miles.png
 
 ---
 
@@ -244,3 +245,9 @@ Given the next step reference speed and lane, as well as a list of waypoints aro
 6. Rotate the path back to global coordinate.
 
 The trajectory generation code is in [main.cpp](https://github.com/YuxingLiu/CarND-Path-Planning-Project/blob/master/src/main.cpp#L337) starting at line 337.
+
+The following screenshot shows the car is able to drive 5 miles without incident.
+![alt text][image2]
+
+
+The complete simulation video can be found [here](https://youtu.be/hgiNaGwIysg).

@@ -63,6 +63,8 @@ else if(lane_change) {
 
     if(too_close) {
         ref_vel -= .224;
+    } else if(ref_vel < 45) {
+        ref_vel += .224;
     }
 }
 ```
@@ -70,7 +72,7 @@ If no vehicle ahead, stay at current lane and accelerate up to max speed:
 ```cpp
 else
 {
-    if(ref_vel < 49.5) {
+    if(ref_vel < 45) {
         ref_vel += .224;
     }
 }

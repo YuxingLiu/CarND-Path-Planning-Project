@@ -219,7 +219,7 @@ int main() {
   string init_state = "KL";
 
   // ego vehicle configuration
-  double max_v = 49.5 / 2.24;   // m/s
+  double max_v = 45 / 2.24;     // m/s
   double max_a = 5;             // m/s2
   double max_jerk = 8;          // m/s3
   int num_lanes = 3;
@@ -323,11 +323,13 @@ int main() {
 
                     if(too_close) {
                         ref_vel -= .224;
+                    } else if(ref_vel < 45) {
+                        ref_vel += .224;
                     }
                 }
                 else
                 {
-                    if(ref_vel < 49.5) {
+                    if(ref_vel < 45) {
                         ref_vel += .224;
                     }
                 }
